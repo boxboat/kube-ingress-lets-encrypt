@@ -1,0 +1,62 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: lego-renew
+  namespace: "${NAMESPACE}"
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          initContainers:
+          - name: lego
+            image: boxboat/lego:${LEGO_VERSION}
+            args:
+            - --accept-tos
+            - --email=${EMAIL}
+            - --domains=${DOMAIN_1}
+            - --domains=${DOMAIN_2}
+            - --dns=route53
+            - renew
+            - --days=30
+            env:
+            - name: AWS_REGION
+              value: us-east-1
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: lego-aws
+                  key: access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lego-aws
+                  key: secret-access-key
+            volumeMounts:
+            - name: lego-nfs
+              mountPath: /home/alpine/.lego
+          containers:
+          - name: kubectl
+            image: boxboat/kubectl:${KUBECTL_VERSION}
+            command:
+            - sh
+            - -c
+            - >
+              kubectl create secret tls "${TLS_SECRET}"
+              -n "${NAMESPACE}"
+              --cert=.lego/certificates/${CERT_NAME}.crt
+              --key=.lego/certificates/${CERT_NAME}.key
+              --dry-run
+              -o yaml | kubectl apply -f -
+            volumeMounts:
+            - name: lego-nfs
+              mountPath: /home/alpine/.lego
+          restartPolicy: Never
+          serviceAccountName: lego
+          volumes:
+          - name: lego-nfs
+            persistentVolumeClaim:
+              claimName: lego-nfs
