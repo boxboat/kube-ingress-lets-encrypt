@@ -1,15 +1,12 @@
 ---
-# ingress
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: ingress
   namespace: "${NAMESPACE}"
-  annotations:
-    kubernetes.io/ingress.global-static-ip-name: "kube1-dev"
 spec:
   tls:
   - secretName: "${TLS_SECRET}"
   backend:
-    serviceName: ingress-proxy
+    serviceName: your-service-name
     servicePort: 80

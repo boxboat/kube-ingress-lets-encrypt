@@ -9,18 +9,22 @@ metadata:
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: secret-update
+  name: lego-secret-update
   namespace: "${NAMESPACE}"
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
-  verbs: ["get", "create", "patch"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["${TLS_SECRET}"]
+  verbs: ["get", "patch"]
 
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: secret-update-lego
+  name: lego-secret-update
   namespace: "${NAMESPACE}"
 subjects:
 - kind: ServiceAccount
@@ -28,7 +32,7 @@ subjects:
   namespace: "${NAMESPACE}"
 roleRef:
   kind: Role
-  name: secret-update
+  name: lego-secret-update
   apiGroup: rbac.authorization.k8s.io
 
 ---
