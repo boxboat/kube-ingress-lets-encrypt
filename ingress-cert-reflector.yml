@@ -60,27 +60,35 @@ spec:
         - sh
         - -c
         - |
-          kubectl get ns --watch --field-selector="status.phase==Active" --no-headers -o "custom-columns=:metadata.name" | \
+          set -e
+          while true; do
+            echo "$(date '+%Y-%m-%d %H:%M:%S') starting watch loop"
+            kubectl get ns --watch --field-selector="status.phase==Active" --no-headers -o "custom-columns=:metadata.name" | \
             while read ns; do
               if [ "$ns" != "${NAMESPACE}" ]; then
-                echo "namespace - $ns"
+                echo "$(date '+%Y-%m-%d %H:%M:%S') namespace - $ns"
                 kubectl -n "${NAMESPACE}" get secret "${TLS_SECRET}" -o yaml --export | \
                   kubectl -n "$ns" apply -f -
               fi
             done
+          done
       - name: secret-watch
         image: boxboat/kubectl:${KUBECTL_VERSION}
         command:
         - sh
         - -c
         - |
-          kubectl -n "${NAMESPACE}" get secret "${TLS_SECRET}" --watch --no-headers -o "custom-columns=:metadata.name" | \
+          set -e
+          while true; do
+            echo "$(date '+%Y-%m-%d %H:%M:%S') starting watch loop"
+            kubectl -n "${NAMESPACE}" get secret "${TLS_SECRET}" --watch --no-headers -o "custom-columns=:metadata.name" | \
             while read secret; do
               export=$(kubectl -n "${NAMESPACE}" get secret "$secret" -o yaml --export)
               for ns in $(kubectl get ns --field-selector="status.phase==Active" --no-headers -o "custom-columns=:metadata.name"); do
                 if [ "$ns" != "${NAMESPACE}" ]; then
-                  echo "namespace - $ns"
+                  echo "$(date '+%Y-%m-%d %H:%M:%S') namespace - $ns"
                   echo "$export" | kubectl -n "$ns" apply -f -
                 fi
               done
             done
+          done
