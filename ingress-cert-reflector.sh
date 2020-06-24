@@ -5,5 +5,5 @@ set -a
 . "vars.env"
 set +a
 
-envsubst '${KUBECTL_VERSION},${TLS_SECRET},${NAMESPACE}' < ingress-cert-reflector.yml \
-    | kubectl apply -f -
+envsubst < ingress-cert-reflector.yml \
+    | kubectl apply -f  -
