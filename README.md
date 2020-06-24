@@ -16,3 +16,6 @@ Kubernetes resources in this repository should be applied in the following order
 Detailed instructions for reflecting the TLS Secret to every namespace can be found in the [BoxBoat Blog post for Kubernetes NGINX Ingress TLS Secrets in All Namespaces](https://boxboat.com/2018/07/02/kubernetes-nginx-ingress-tls-secrets-all-namespaces/)
 
 1. Deploy `ingress-cert-reflector.yml` by running `./ingress-cert-reflector.sh`
+
+## Additional support for multiple secret replication.
+Each secret is attached a label (can be configured via vars.end - REPLICATE_LABEL_NAME and REPLICATE_LABEL_VALUE) and this will be added to the secrets. Cert reflector script will list all secrets containing these labels and sync all those secrets across all namespaces.
